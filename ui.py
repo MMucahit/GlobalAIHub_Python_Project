@@ -10,6 +10,15 @@ import pandas as pd
 ## Kendi olışturduğumuz kütüphaneyi içeri aktarıyoruz.
 import order
 
+## Kendi oluşturduğumuz veritabanı bağlantısı için fonksiyonlar
+import db
+
+## Veritabanının oluşturulması ve bağlantının yapılması
+columns = ['FullName', 'Pizza', 'Sauces', 'Price', 'CardNumber', 'Time']
+
+cursor, con = db.connection_db('orders')
+db.create_table(cursor, columns)
+
 ## Csv dosyalarının okunması
 df_pizza = pd.read_csv('pizza.csv')
 df_sauce = pd.read_csv('sauce.csv')
@@ -56,8 +65,15 @@ if is_sauces:
             ## Csv dosyasının kayıt edilme işlemi
             df_orders.to_csv('orders.csv', index=False)
 
+            ## Sqlite' a verilerin yazılması
+            db.add_row(cursor, con, row.values(), row.keys())
+            data = db.show_rows(cursor, row.keys())
+
             ## Sipariş loglarının gösterilmesi
+            st.write('Csv File')
             st.write(df_orders)
+            st.write('Sqlite')
+            st.write(data)
 
 ## Sos seçmek istenmezse işletilecek kod blokları
 else:
@@ -72,14 +88,18 @@ else:
         price = order.Order(pizza).receipt()[1]
 
         ## Yapılan siparişin bilgilerinin csv dosyasına yazılması
-        row = {'FullName':FullName, 'Pizza': pizza, 'Price': price, 'CardNumber': card_number, 'Time': str(datetime.datetime.now())}
+        row = {'FullName':FullName, 'Pizza': pizza, 'Sauces': '', 'Price': price,'CardNumber': card_number, 'Time': str(datetime.datetime.now())}
         df_orders.loc[len(df_orders.index)]= row        
         
+        ## Sqlite' a verilerin yazılması
+        db.add_row(cursor, con, row.values(), row.keys())
+        data = db.show_rows(cursor, row.keys())
+
         ## Csv dosyasının kayıt edilme işlemi
         df_orders.to_csv('orders.csv', index=False)
         
         ## Sipariş loglarının gösterilmesi
+        st.write('Csv File')
         st.write(df_orders)
-
-
-    
+        st.write('Sqlite')
+        st.write(data)
